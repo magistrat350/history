@@ -1,0 +1,11 @@
+{
+  "name": "Chronika – Geschichte erzählt",
+  "short_name": "Chronika",
+  "description": "Geschichtswissen in Artikeln, Zeitstrahlen und Redewendungen.",
+  "lang": "de",
+  "start_url": "./#/",
+  "display": "standalone",
+  "background_color": "#f6f1e7",
+  "theme_color": "#8a3b12",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

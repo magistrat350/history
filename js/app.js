@@ -12,6 +12,10 @@
   const T = index(D.themes);
   const C = index(D.countries);
   const K = index(D.continents);
+  const FACTS = D.facts || [];
+  const TALK = D.talk || [];
+  const APP = window.CHRONIKA || { version: 'dev', repo: 'magistrat350/history' };
+  const IS_NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 
   D.articles.sort((a, b) => a.years[0] - b.years[0]);
 
@@ -64,6 +68,37 @@
   const themeChips = ids => (ids || []).map(themeChip).join('');
 
   const KIND_LABEL = { redewendung: 'Redewendung', zitat: 'Geflügeltes Wort', kalauer: 'Kalauer', wort: 'Wortgeschichte', merkspruch: 'Eselsbrücke' };
+  const TALK_CATS = { buero: '💼 Arbeit & Projekte', alltag: '☕ Alltag & Freunde', konter: '⚡ Schlagfertig', prognose: '🔮 Fehlprognosen & große Worte', politik: '🗣️ Diskussion & Politik' };
+  const FACT_CATS = { perspektive: '⏳ Zeitliche Perspektive', mythos: '🧐 Mythen', kurios: '🤯 Kurioses', alltag: '🍺 Ursprung des Alltags', menschen: '👤 Menschen' };
+  const dayIndex = n => Math.floor(Date.now() / 86400000) % n;
+  const shuffle = list => { const a = [...list]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  function talkCard(t, opts = {}) {
+    return `<div class="card talk-card${opts.big ? ' big' : ''}" id="talk-${t.id}">
+      <div class="talk-when"><span class="kind">${TALK_CATS[t.cat] || ''}</span>${esc(t.when)}</div>
+      <div class="talk-say">„${esc(t.say)}“</div>
+      <div class="talk-story">${rich(t.story)}</div>
+      <div class="foot">
+        <button class="chip" data-copy="${esc(t.say)}">📋 Kopieren</button>
+        ${t.a && A[t.a] ? `<a class="chip" href="#/artikel/${t.a}">📜 ${esc(A[t.a].title)}</a>` : ''}
+        ${t.r && I[t.r] ? `<a class="chip" href="#/redewendungen/${t.r}">💬 Redewendung</a>` : ''}
+        ${t.y != null ? `<button class="chip" data-sim="${t.y}">⇄ ${fy({ y: t.y })}</button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  function factCard(f) {
+    return `<div class="card fact-card" id="fakt-${f.id}">
+      <span class="kind">${FACT_CATS[f.cat] || ''}</span>
+      <h3>${esc(f.t)}</h3>
+      <p>${rich(f.d)}</p>
+      <div class="foot">
+        ${f.y != null ? `<button class="chip" data-sim="${f.y}">⇄ ${fy({ y: f.y, yd: f.yd })}</button>` : ''}
+        ${f.a && A[f.a] ? `<a class="chip" href="#/artikel/${f.a}">📜 ${esc(A[f.a].title)}</a>` : ''}
+      </div>
+    </div>`;
+  }
+
 
   /* ---------- Zeitstrahl-Quellen ---------- */
   const SOURCES = [
@@ -143,9 +178,8 @@
   /* ---------- Ansichten ---------- */
   function viewHome() {
     setTitle();
-    const day = Math.floor(Date.now() / 86400000);
     const sayings = D.idioms.filter(i => i.kind !== 'merkspruch');
-    const idiom = sayings[day % sayings.length];
+    const idiom = sayings[dayIndex(sayings.length)];
     const featured = D.articles.filter(a => a.featured).slice(0, 6);
     const nEvents = ALL_EVENTS.length;
 
@@ -153,9 +187,10 @@
       <section class="hero">
         <div class="eyebrow">Geschichte erzählt</div>
         <h1>Von der Steinzeit bis heute – alles, was bleibt.</h1>
-        <p class="lead">Umfassende Artikel zu den spannenden Kapiteln der Geschichte, Zeitstrahlen für jedes Land, jeden Kontinent und die ganze Welt – und dazu die Redewendungen, die bis heute in unserer Sprache stecken.</p>
+        <p class="lead">Umfassende Artikel zu den spannenden Kapiteln der Geschichte, Zeitstrahlen für jedes Land, jeden Kontinent und die ganze Welt, überraschende Fakten – und Geschichtsreferenzen, mit denen du in jedem Gespräch punktest.</p>
         <div class="actions">
           <a class="btn" href="#/zeitstrahl/welt">🌍 Weltzeitstrahl</a>
+          <a class="btn ghost" href="#/gespraech">💡 Gesprächsstoff</a>
           <a class="btn ghost" href="#/artikel">📜 Alle Artikel</a>
           <a class="btn ghost" href="#/themen">🔁 Wiederkehrende Themen</a>
         </div>
@@ -164,6 +199,19 @@
           <div class="stat"><strong>${D.countries.length}</strong><span>Länder-Zeitstrahlen</span></div>
           <div class="stat"><strong>${nEvents}</strong><span>Ereignisse</span></div>
           <div class="stat"><strong>${D.idioms.length}</strong><span>Redewendungen & Merksprüche</span></div>
+          <div class="stat"><strong>${TALK.length}</strong><span>Sprüche fürs Gespräch</span></div>
+          <div class="stat"><strong>${FACTS.length}</strong><span>Fakten</span></div>
+        </div>
+      </section>
+
+      <section class="section feature-row">
+        <div>
+          <div class="section-head"><h2>💡 Für dein nächstes Gespräch</h2><a href="#/gespraech">Alle ${TALK.length} →</a></div>
+          ${TALK.length ? talkCard(TALK[dayIndex(TALK.length)]) : ''}
+        </div>
+        <div>
+          <div class="section-head"><h2>🤯 Fakt des Tages</h2><a href="#/fakten">Alle ${FACTS.length} →</a></div>
+          ${FACTS.length ? factCard(FACTS[dayIndex(FACTS.length)]) : ''}
         </div>
       </section>
 
@@ -268,6 +316,8 @@
     const prev = D.articles[pos - 1], next = D.articles[pos + 1];
     const idioms = D.idioms.filter(i => i.a === a.id || (a.idioms || []).includes(i.id));
     const related = (a.related || []).map(r => A[r]).filter(Boolean);
+    const articleFacts = FACTS.filter(f => f.a === a.id);
+    const articleTalk = TALK.filter(t => t.a === a.id);
     const countries = (a.countries || []).map(c => C[c]).filter(Boolean);
     const conts = (a.continents || []).map(k => K[k]).filter(Boolean);
 
@@ -295,6 +345,8 @@
               ${callout(s.box)}`).join('')}
           </div>
           ${idioms.length ? `<section class="section"><h2>💬 Redewendungen & Anspielungen</h2><div class="masonry">${idioms.map(i => idiomCard(i)).join('')}</div></section>` : ''}
+          ${articleFacts.length ? `<section class="section"><h2>🤯 Schon gewusst?</h2><div class="masonry">${articleFacts.map(factCard).join('')}</div></section>` : ''}
+          ${articleTalk.length ? `<section class="section"><h2>💡 Für Gespräche</h2><div class="masonry">${articleTalk.map(t => talkCard(t)).join('')}</div></section>` : ''}
           ${related.length ? `<section class="section"><h2>Weiterlesen</h2><div class="grid">${related.map(articleCard).join('')}</div></section>` : ''}
           <div class="pager">
             ${prev ? `<a class="card" href="#/artikel/${prev.id}"><div class="meta">← Vorheriger Artikel</div><h3>${esc(prev.title)}</h3></a>` : '<span></span>'}
@@ -417,6 +469,8 @@
     setTitle(t.name);
     const arts = D.articles.filter(a => a.themes.includes(id));
     const idioms = D.idioms.filter(i => (i.th || []).includes(id));
+    const themeTalk = TALK.filter(x => (x.th || []).includes(id));
+    const themeFacts = FACTS.filter(x => (x.th || []).includes(id));
     const evs = ALL_EVENTS.filter(e => (e.th || []).includes(id));
     const state = { scope: 'alle' };
 
@@ -428,6 +482,8 @@
       <div class="pattern" style="--c:${t.color}"><strong>Das Muster:</strong> ${rich(t.pattern)}</div>
       ${t.examples ? `<section class="section"><h2>Immer wieder: Beispiele quer durch die Zeit</h2><div class="examples">${t.examples.map(x => `<div class="card"><div class="ev-year">${esc(x[0])}</div><strong>${esc(x[1])}</strong><p class="small muted" style="margin-top:4px">${rich(x[2])}</p></div>`).join('')}</div></section>` : ''}
       ${arts.length ? `<section class="section"><h2>Artikel zum Thema</h2><div class="grid">${arts.map(articleCard).join('')}</div></section>` : ''}
+      ${themeTalk.length ? `<section class="section"><h2>💡 Für Gespräche</h2><div class="masonry">${themeTalk.map(x => talkCard(x)).join('')}</div></section>` : ''}
+      ${themeFacts.length ? `<section class="section"><h2>🤯 Schon gewusst?</h2><div class="masonry">${themeFacts.map(factCard).join('')}</div></section>` : ''}
       ${idioms.length ? `<section class="section"><h2>💬 Was davon in unserer Sprache blieb</h2><div class="masonry">${idioms.map(i => idiomCard(i)).join('')}</div></section>` : ''}
       <section class="section">
         <div class="section-head"><h2>Quer durch alle Zeitstrahlen (${evs.length})</h2>
@@ -521,7 +577,9 @@
     const ids = D.idioms.filter(i => hit(i.phrase + ' ' + i.meaning + ' ' + plain(i.origin)));
     const evs = ALL_EVENTS.filter(e => (yearQ != null && (e.y === yearQ || (e.end != null && e.y <= yearQ && yearQ <= e.end))) || hit(e.t + ' ' + plain(e.d) + ' ' + e.src.name));
     const places = SOURCES.filter(s => hit(s.name));
-    const total = arts.length + ids.length + evs.length + places.length;
+    const talks = TALK.filter(t => hit(t.when + ' ' + t.say + ' ' + plain(t.story)));
+    const facts = FACTS.filter(f => (yearQ != null && f.y === yearQ) || hit(f.t + ' ' + plain(f.d)));
+    const total = arts.length + ids.length + evs.length + places.length + talks.length + facts.length;
     const hl = s => { let out = esc(s); for (const t of q.trim().split(/\s+/).filter(x => x.length > 1)) out = out.replace(new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'), '<mark>$1</mark>'); return out; };
 
     app.innerHTML = `
@@ -530,9 +588,165 @@
       <p class="muted">${total} Treffer</p>
       ${places.length ? `<section class="section"><h2>Zeitstrahlen</h2><div class="grid tight">${places.map(s => `<a class="card mini" href="${srcHref(s)}"><span class="icon">${s.icon}</span><div><strong>${esc(s.name)}</strong></div></a>`).join('')}</div></section>` : ''}
       ${arts.length ? `<section class="section"><h2>Artikel (${arts.length})</h2><div class="grid">${arts.map(articleCard).join('')}</div></section>` : ''}
+      ${talks.length ? `<section class="section"><h2>💡 Gesprächsstoff (${talks.length})</h2><div class="result-list">${talks.map(t => `<a class="result" href="#/gespraech/${t.id}"><div class="meta">${TALK_CATS[t.cat]}</div><strong>„${hl(t.say)}“</strong><div class="small muted">${hl(t.when)}</div></a>`).join('')}</div></section>` : ''}
+      ${facts.length ? `<section class="section"><h2>🤯 Fakten (${facts.length})</h2><div class="result-list">${facts.map(f => `<a class="result" href="#/fakten/${f.id}"><div class="meta">${FACT_CATS[f.cat]}</div><strong>${hl(f.t)}</strong><div class="small muted">${hl(plain(f.d))}</div></a>`).join('')}</div></section>` : ''}
       ${ids.length ? `<section class="section"><h2>Redewendungen (${ids.length})</h2><div class="result-list">${ids.map(i => `<a class="result" href="#/redewendungen/${i.id}"><div class="meta">${KIND_LABEL[i.kind]}</div><strong>„${hl(i.phrase)}“</strong> – ${hl(i.meaning)}</a>`).join('')}</div></section>` : ''}
       ${evs.length ? `<section class="section"><h2>Ereignisse (${evs.length})</h2><div class="result-list">${evs.sort((a, b) => a.y - b.y).slice(0, 200).map(e => `<a class="result" href="${srcHref(e.src)}"><div class="meta">${e.src.icon} ${esc(e.src.name)} · ${fy(e)}</div><strong>${hl(e.t)}</strong>${e.d ? `<div class="small muted">${hl(plain(e.d))}</div>` : ''}</a>`).join('')}</div></section>` : ''}
       ${!total ? `<div class="empty">Keine Treffer. Versuch es mit einem anderen Begriff oder einer Jahreszahl.</div>` : ''}`;
+  }
+
+  function viewTalk(focus) {
+    setTitle('Gesprächsstoff');
+    const state = { cat: '', q: '' };
+    app.innerHTML = `
+      <div class="eyebrow">Geschichte im Gespräch</div>
+      <h1>Gesprächsstoff</h1>
+      <p class="lead">Geschichtsreferenzen für jede Lebenslage: Was du sagen kannst, wann es passt – und die Geschichte dahinter, falls jemand nachfragt.</p>
+      <div class="tl-controls">
+        <div class="row">
+          <input class="input" id="talkFilter" placeholder="Situation oder Stichwort, z. B. Meeting, zu spät, Party …" style="flex:1 1 260px">
+          <button class="btn small" id="talkRandom">🎲 Zufälliger Spruch</button>
+        </div>
+        <div class="chips" id="talkCats">
+          <button class="chip on" data-c="">Alle (${TALK.length})</button>
+          ${Object.entries(TALK_CATS).map(([k, l]) => `<button class="chip" data-c="${k}">${l} (${TALK.filter(t => t.cat === k).length})</button>`).join('')}
+        </div>
+      </div>
+      <div id="talkPick"></div>
+      <div id="talkList" class="masonry" style="margin-top:20px"></div>`;
+    const list = document.getElementById('talkList');
+    const draw = () => {
+      const q = norm(state.q);
+      const items = TALK.filter(t => (!state.cat || t.cat === state.cat) && (!q || norm(t.when + ' ' + t.say + ' ' + plain(t.story)).includes(q)));
+      list.innerHTML = items.map(t => talkCard(t)).join('') || `<div class="empty">Nichts gefunden – probier ein anderes Stichwort.</div>`;
+    };
+    document.getElementById('talkFilter').oninput = e => { state.q = e.target.value; draw(); };
+    document.getElementById('talkCats').onclick = e => {
+      const b = e.target.closest('button[data-c]');
+      if (!b) return;
+      state.cat = b.dataset.c;
+      document.querySelectorAll('#talkCats .chip').forEach(x => x.classList.toggle('on', x === b));
+      draw();
+    };
+    document.getElementById('talkRandom').onclick = () => {
+      const pool = TALK.filter(t => !state.cat || t.cat === state.cat);
+      document.getElementById('talkPick').innerHTML = `<div style="margin-top:16px">${talkCard(pool[Math.floor(Math.random() * pool.length)], { big: true })}</div>`;
+    };
+    draw();
+    if (focus) focusCard('talk-' + focus);
+  }
+
+  function viewFacts(focus) {
+    setTitle('Fakten');
+    const state = { cat: '', order: FACTS };
+    app.innerHTML = `
+      <div class="eyebrow">Schon gewusst?</div>
+      <h1>Geschichtsfakten</h1>
+      <p class="lead">Überraschende Fakten, Mythen, die keine sind, und Zusammenhänge, die die Zeit in Perspektive rücken – perfekt zum Weitererzählen.</p>
+      <div class="tl-controls">
+        <div class="chips" id="factCats">
+          <button class="chip on" data-c="">Alle (${FACTS.length})</button>
+          ${Object.entries(FACT_CATS).map(([k, l]) => `<button class="chip" data-c="${k}">${l} (${FACTS.filter(f => f.cat === k).length})</button>`).join('')}
+        </div>
+        <div class="row"><button class="btn small" id="factShuffle">🔀 Mischen</button></div>
+      </div>
+      <div id="factList" class="masonry" style="margin-top:20px"></div>`;
+    const list = document.getElementById('factList');
+    const draw = () => { list.innerHTML = state.order.filter(f => !state.cat || f.cat === state.cat).map(factCard).join(''); };
+    document.getElementById('factCats').onclick = e => {
+      const b = e.target.closest('button[data-c]');
+      if (!b) return;
+      state.cat = b.dataset.c;
+      document.querySelectorAll('#factCats .chip').forEach(x => x.classList.toggle('on', x === b));
+      draw();
+    };
+    document.getElementById('factShuffle').onclick = () => { state.order = shuffle(FACTS); draw(); };
+    draw();
+    if (focus) focusCard('fakt-' + focus);
+  }
+
+  function focusCard(id) {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('focus');
+      window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - 90), behavior: 'instant' });
+    }, 30);
+  }
+
+  function viewInfo() {
+    setTitle('Über die App');
+    const apkUrl = `https://github.com/${APP.repo}/releases/latest/download/chronika.apk`;
+    app.innerHTML = `
+      <div class="eyebrow">Über die App</div>
+      <h1>Chronika</h1>
+      <div class="grid" style="margin-top:20px">
+        <div class="card">
+          <h3>Version</h3>
+          <p>Installiert: <strong>${esc(APP.version)}</strong>${IS_NATIVE ? ' (Android-App)' : ' (Web)'}</p>
+          <div id="updateResult" class="small muted" style="margin:10px 0">Noch nicht geprüft.</div>
+          <button class="btn small" id="checkUpdate">🔄 Nach Updates suchen</button>
+        </div>
+        <div class="card">
+          <h3>Android-App</h3>
+          <p>Die jeweils neueste Version liegt immer unter derselben Adresse auf GitHub:</p>
+          <p style="margin-top:10px"><a class="btn small" href="${apkUrl}">⬇️ chronika.apk herunterladen</a></p>
+          <p class="small faint" style="margin-top:10px;word-break:break-all">${esc(apkUrl)}</p>
+        </div>
+        <div class="card">
+          <h3>So kommen Updates</h3>
+          <p>Jede Änderung, die auf GitHub hochgeladen wird, baut automatisch eine neue App-Version. Die App prüft beim Start (höchstens alle 12 Stunden), ob es etwas Neues gibt, und zeigt dann oben einen Hinweis. Antippen, herunterladen, installieren – deine Einstellungen bleiben erhalten.</p>
+        </div>
+        <div class="card">
+          <h3>Inhalt</h3>
+          <p>${D.articles.length} Artikel · ${SOURCES.length} Zeitstrahlen · ${ALL_EVENTS.length} Ereignisse · ${D.idioms.length} Redewendungen · ${TALK.length} Gesprächsreferenzen · ${FACTS.length} Fakten</p>
+        </div>
+      </div>`;
+    document.getElementById('checkUpdate').onclick = async () => {
+      const out = document.getElementById('updateResult');
+      out.textContent = 'Prüfe …';
+      try {
+        const u = await checkUpdate(true);
+        out.innerHTML = u.newer
+          ? `Neue Version <strong>${esc(u.latest)}</strong> verfügbar. <a href="${esc(u.url)}">Jetzt herunterladen</a>`
+          : `Du hast die neueste Version (${esc(u.latest)}).`;
+      } catch (err) {
+        out.textContent = 'Prüfung nicht möglich. Bist du online? Es gibt eventuell noch keine veröffentlichte Version.';
+      }
+    };
+  }
+
+  /* ---------- Updates über GitHub Releases ---------- */
+  const verParts = v => String(v).replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+  function isNewer(a, b) {
+    const x = verParts(a), y = verParts(b);
+    for (let i = 0; i < Math.max(x.length, y.length); i++) {
+      if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+    }
+    return false;
+  }
+  async function checkUpdate() {
+    const res = await fetch(`https://api.github.com/repos/${APP.repo}/releases/latest`, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rel = await res.json();
+    const latest = String(rel.tag_name || '').replace(/^v/, '');
+    const apk = (rel.assets || []).find(x => /\.apk$/i.test(x.name));
+    const info = { latest, newer: APP.version !== 'dev' && isNewer(latest, APP.version), url: apk ? apk.browser_download_url : rel.html_url, checked: Date.now() };
+    store.set('update', info);
+    return info;
+  }
+  function showUpdateBanner(info) {
+    if (!info || !info.newer || !isNewer(info.latest, APP.version) || store.get('dismissed', '') === info.latest) return;
+    const bar = document.getElementById('updateBanner');
+    bar.innerHTML = `<span>🆕 Version <strong>${esc(info.latest)}</strong> ist da.</span><a class="btn small" href="${esc(info.url)}">Herunterladen</a><button class="icon-btn" aria-label="Ausblenden" id="dismissUpdate">✕</button>`;
+    bar.hidden = false;
+    document.getElementById('dismissUpdate').onclick = () => { store.set('dismissed', info.latest); bar.hidden = true; };
+  }
+  async function autoUpdateCheck() {
+    if (!IS_NATIVE || APP.version === 'dev') return;
+    const cached = store.get('update', null);
+    if (cached && Date.now() - cached.checked < 12 * 3600 * 1000) return showUpdateBanner(cached);
+    try { showUpdateBanner(await checkUpdate()); } catch { /* offline */ }
   }
 
   function notFound() {
@@ -569,6 +783,13 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !drawer.hidden) closeDrawer(); });
 
   app.addEventListener('click', e => {
+    const copy = e.target.closest('[data-copy]');
+    if (copy) {
+      const text = copy.dataset.copy;
+      const done = () => { const old = copy.textContent; copy.textContent = '✓ Kopiert'; setTimeout(() => { copy.textContent = old; }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => {});
+      return;
+    }
     const sim = e.target.closest('[data-sim]');
     if (sim) { openSimultaneous(parseInt(sim.dataset.sim, 10), sim.dataset.src || ''); return; }
     const jump = e.target.closest('[data-jump]');
@@ -587,6 +808,11 @@
     [/^themen\/([\w-]+)$/, viewTheme],
     [/^redewendungen$/, viewIdioms],
     [/^redewendungen\/([\w-]+)$/, viewIdiom],
+    [/^gespraech$/, () => viewTalk()],
+    [/^gespraech\/([\w-]+)$/, viewTalk],
+    [/^fakten$/, () => viewFacts()],
+    [/^fakten\/([\w-]+)$/, viewFacts],
+    [/^info$/, viewInfo],
     [/^suche$/, (_, params) => viewSearch(params.get('q') || '')]
   ];
 
@@ -631,4 +857,5 @@
   }
 
   route();
+  autoUpdateCheck();
 })();

@@ -19,6 +19,8 @@
     <nav class="mainnav" aria-label="Hauptnavigation">
       <a href="#/artikel" data-nav="artikel">Artikel</a>
       <a href="#/zeitstrahl" data-nav="zeitstrahl">Zeitstrahlen</a>
+      <a href="#/gespraech" data-nav="gespraech">Gesprächsstoff</a>
+      <a href="#/fakten" data-nav="fakten">Fakten</a>
       <a href="#/themen" data-nav="themen">Themen</a>
       <a href="#/redewendungen" data-nav="redewendungen">Redewendungen</a>
     </nav>
@@ -28,13 +30,15 @@
     <button class="icon-btn" id="themeToggle" title="Hell/Dunkel umschalten" aria-label="Farbschema umschalten">◐</button>
   </header>
 
+  <div id="updateBanner" class="update-banner" hidden></div>
   <main id="app" tabindex="-1"></main>
 
   <nav class="bottomnav" aria-label="Navigation">
     <a href="#/" data-nav=""><span>🏛️</span>Start</a>
     <a href="#/artikel" data-nav="artikel"><span>📜</span>Artikel</a>
     <a href="#/zeitstrahl" data-nav="zeitstrahl"><span>⏳</span>Zeit</a>
-    <a href="#/themen" data-nav="themen"><span>🔁</span>Themen</a>
+    <a href="#/gespraech" data-nav="gespraech"><span>💡</span>Gespräch</a>
+    <a href="#/fakten" data-nav="fakten"><span>🤯</span>Fakten</a>
     <a href="#/redewendungen" data-nav="redewendungen"><span>💬</span>Sprüche</a>
   </nav>
 
@@ -51,10 +55,15 @@
 
   <footer class="footer">
     Chronika · Geschichte erzählt — Inhalte zum Lernen und Stöbern. Jahreszahlen der Antike sind oft Näherungswerte.
+    <br><a href="#/themen">Wiederkehrende Themen</a> · <a href="#/info">Über die App &amp; Updates</a>
   </footer>
 
+  <script src="js/version.js"></script>
   <script src="data/themes.js"></script>
   <script src="data/idioms.js"></script>
+  <script src="data/idioms-2.js"></script>
+  <script src="data/talk.js"></script>
+  <script src="data/facts.js"></script>
   <script src="data/articles-antike.js"></script>
   <script src="data/articles-mittelalter.js"></script>
   <script src="data/articles-neuzeit.js"></script>

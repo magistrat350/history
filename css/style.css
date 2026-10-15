@@ -112,7 +112,7 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Layout ---------- */
 #app { flex: 1; width: 100%; max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; outline: none; }
-.footer { text-align: center; color: var(--ink-faint); font-size: .82rem; padding: 24px 16px 32px; border-top: 1px solid var(--line); }
+.footer { text-align: center; color: var(--ink-faint); font-size: .82rem; padding: 24px 16px 32px; border-top: 1px solid var(--line); line-height: 1.8; }
 .section { margin: 42px 0; }
 .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .section-head h2 { margin: 0; }
@@ -268,6 +268,27 @@ button.chip.on { background: var(--accent); border-color: var(--accent); color: 
 .masonry { columns: 3 320px; column-gap: 16px; }
 .masonry > * { break-inside: avoid; margin-bottom: 16px; }
 
+/* ---------- Gesprächsstoff & Fakten ---------- */
+.talk-card, .fact-card { display: flex; flex-direction: column; gap: 8px; }
+.talk-card .kind, .fact-card .kind { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); font-weight: 600; display: block; }
+.talk-when { font-size: .92rem; color: var(--ink-soft); }
+.talk-when .kind { margin-bottom: 4px; }
+.talk-say { font-family: var(--display); font-size: 1.35rem; line-height: 1.25; color: var(--accent); text-wrap: balance; }
+.talk-card.big .talk-say { font-size: 1.8rem; }
+.talk-story { font-family: var(--serif); color: var(--ink-soft); font-size: 1rem; line-height: 1.6; }
+.fact-card h3 { margin: 0; font-size: 1.12rem; text-wrap: balance; }
+.fact-card p { font-family: var(--serif); font-size: 1rem; line-height: 1.6; }
+.talk-card .foot, .fact-card .foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.card.focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.feature-row > div { min-width: 0; }
+
+/* ---------- Update-Hinweis ---------- */
+.update-banner {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
+  padding: 10px 16px; background: var(--teal-soft); color: var(--ink); border-bottom: 1px solid var(--line); font-size: .95rem;
+}
+.update-banner[hidden] { display: none; }
+
 /* ---------- Drawer ---------- */
 .drawer { position: fixed; inset: 0; z-index: 50; }
 .drawer[hidden] { display: none; }
@@ -293,6 +314,10 @@ mark { background: color-mix(in srgb, var(--gold) 35%, transparent); color: inhe
 .empty { text-align: center; padding: 50px 20px; color: var(--ink-faint); }
 
 /* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .mainnav a[data-nav="themen"], .mainnav a[data-nav="redewendungen"] { display: none; }
+  .searchbox { flex-basis: 220px; }
+}
 @media (max-width: 960px) {
   .article-wrap { grid-template-columns: 1fr; }
   .aside { position: static; }
@@ -315,7 +340,7 @@ mark { background: color-mix(in srgb, var(--gold) 35%, transparent); color: inhe
     background: var(--surface); border-top: 1px solid var(--line);
     padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
   }
-  .bottomnav a { flex: 1; display: flex; flex-direction: column; align-items: center; font-size: .7rem; color: var(--ink-faint); gap: 1px; padding: 4px 0; border-radius: 10px; }
+  .bottomnav a { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; font-size: .66rem; color: var(--ink-faint); gap: 1px; padding: 4px 0; border-radius: 10px; }
   .bottomnav a span { font-size: 1.2rem; }
   .bottomnav a.active { color: var(--accent); background: var(--accent-soft); }
   .bottomnav a:hover { text-decoration: none; }

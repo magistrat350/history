@@ -1,0 +1,135 @@
+name: App bauen & veröffentlichen
+
+# Bei jedem Push wird die App geprüft und als Android-APK gebaut.
+# Auf dem Standard-Branch wird die APK zusätzlich als GitHub-Release
+# veröffentlicht – die installierte App erkennt das und bietet das Update an.
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Inhalte prüfen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/check-data.js
+
+  android:
+    name: Android-APK bauen
+    needs: check
+    runs-on: ubuntu-latest
+    env:
+      APP_VERSION: 1.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Web-App zusammenstellen
+        run: node tools/build-web.js
+
+      - name: Android-Projekt erzeugen
+        run: |
+          npx cap add android
+          npx capacitor-assets generate --android
+          npx cap sync android
+
+      - name: Versionsnummer setzen
+        run: |
+          sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"$APP_VERSION\"/" android/app/build.gradle
+          grep -E "versionCode|versionName" android/app/build.gradle
+
+      - name: APK kompilieren
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: APK signieren
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > release.jks
+            PASS="$KS_PASS"
+          else
+            cp signing/chronika.jks release.jks
+            PASS="chronika-history"
+          fi
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/zipalign" -p -f 4 android/app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
+          "$BT/apksigner" sign --ks release.jks --ks-pass "pass:$PASS" --ks-key-alias chronika --key-pass "pass:$PASS" --out chronika.apk aligned.apk
+          "$BT/apksigner" verify --print-certs chronika.apk
+          cp chronika.apk "chronika-$APP_VERSION.apk"
+          rm -f release.jks aligned.apk
+
+      - name: APK als Build-Artefakt speichern
+        uses: actions/upload-artifact@v4
+        with:
+          name: chronika-${{ env.APP_VERSION }}
+          path: chronika.apk
+
+      - name: Release veröffentlichen
+        if: github.ref_name == github.event.repository.default_branch
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          name: Chronika ${{ env.APP_VERSION }}
+          make_latest: true
+          body: |
+            Neue Version von Chronika (Stand: Commit ${{ github.sha }}).
+
+            **Installieren:** `chronika.apk` auf dem Android-Handy herunterladen und öffnen.
+            Bereits installiert? Einfach drüberinstallieren – deine Einstellungen bleiben erhalten.
+          files: |
+            chronika.apk
+            chronika-${{ env.APP_VERSION }}.apk
+
+  pages:
+    name: Web-Version (GitHub Pages)
+    needs: check
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    # Funktioniert erst, wenn GitHub Pages unter Settings → Pages auf „GitHub Actions“ steht.
+    continue-on-error: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: APP_VERSION=1.${{ github.run_number }} node tools/build-web.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: www
+      - id: deploy
+        uses: actions/deploy-pages@v4

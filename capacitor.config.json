@@ -1,0 +1,8 @@
+{
+  "appId": "io.github.magistrat350.chronika",
+  "appName": "Chronika",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#f6f1e7"
+  }
+}

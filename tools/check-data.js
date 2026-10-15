@@ -14,6 +14,7 @@ const A = ids(D.articles), I = ids(D.idioms), T = ids(D.themes), C = ids(D.count
 const errors = [];
 const dupes = (list, what) => { const s = new Set(); for (const x of list) { if (s.has(x.id)) errors.push(`doppelte ${what}-ID: ${x.id}`); s.add(x.id); } };
 dupes(D.articles, 'Artikel'); dupes(D.idioms, 'Redewendung'); dupes(D.countries, 'Land');
+dupes(D.talk || [], 'Gesprächsreferenz'); dupes(D.facts || [], 'Fakt');
 function text(where, s) {
   for (const m of String(s || '').matchAll(/\[\[(\w):([\w-]+)\|/g)) {
     const set = { a: A, l: C, t: T }[m[1]];
@@ -34,6 +35,22 @@ for (const a of D.articles) {
   a.sections.forEach(s => { s.p.forEach(p => text(w, p)); if (s.box) text(w, s.box.text); });
   a.keyDates.forEach(k => text(w, k[1]));
 }
+const TALK_CATS = ['buero', 'alltag', 'konter', 'prognose', 'politik'];
+const FACT_CATS = ['perspektive', 'mythos', 'kurios', 'alltag', 'menschen'];
+for (const t of D.talk || []) {
+  const w = `Gesprächsreferenz ${t.id}`;
+  if (!TALK_CATS.includes(t.cat)) errors.push(`${w}: unbekannte Kategorie ${t.cat}`);
+  if (!t.when || !t.say || !t.story) errors.push(`${w}: when/say/story fehlt`);
+  check(w, A, t.a, 'Artikel'); check(w, I, t.r, 'Redewendung');
+  (t.th || []).forEach(x => check(w, T, x, 'Thema')); text(w, t.story);
+}
+for (const f of D.facts || []) {
+  const w = `Fakt ${f.id}`;
+  if (!FACT_CATS.includes(f.cat)) errors.push(`${w}: unbekannte Kategorie ${f.cat}`);
+  if (!f.t || !f.d) errors.push(`${w}: Titel/Text fehlt`);
+  check(w, A, f.a, 'Artikel');
+  (f.th || []).forEach(x => check(w, T, x, 'Thema')); text(w, f.d);
+}
 const timelines = [['Welt', D.world], ...D.continents.map(k => [k.name, k]), ...D.countries.map(c => [c.name, c])];
 let n = 0;
 for (const [name, tl] of timelines) {
@@ -48,6 +65,6 @@ for (const [name, tl] of timelines) {
     text(w, e.d);
   }
 }
-console.log(`${D.articles.length} Artikel, ${D.idioms.length} Redewendungen, ${D.themes.length} Themen, ${D.countries.length} Länder, ${D.continents.length} Kontinente, ${n} Ereignisse`);
+console.log(`${D.articles.length} Artikel, ${D.idioms.length} Redewendungen, ${(D.talk || []).length} Gesprächsreferenzen, ${(D.facts || []).length} Fakten, ${D.themes.length} Themen, ${D.countries.length} Länder, ${D.continents.length} Kontinente, ${n} Ereignisse`);
 if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
 console.log('Alle Querverweise in Ordnung ✓');

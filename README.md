@@ -21,9 +21,9 @@ python3 -m http.server 8000
 | **Zeitstrahlen** | Weltgeschichte, 6 Kontinente und 56 Länder (884 Ereignisse), gegliedert nach Epochen. In jedem Länder-Zeitstrahl lassen sich die Kontinental- und die Weltgeschichte einblenden |
 | **⇄ Zur gleichen Zeit** | Zeigt zu jedem Ereignis, was gleichzeitig in anderen Ländern und Kontinenten passierte |
 | **Wiederkehrende Themen** | 12 Muster der Geschichte (Imperien, Revolutionen, Seuchen, Glaube & Macht …), jeweils über alle Zeitstrahlen hinweg verfolgbar |
-| **Gesprächsstoff** | 72 Geschichtsreferenzen für den Alltag: in welcher Situation, was man sagt und die Geschichte dahinter – mit Kopier-Knopf und Zufallsspruch |
-| **Fakten** | 91 überraschende Fakten: zeitliche Perspektive, Mythen, Kurioses, Ursprung des Alltags, Menschen |
-| **Redewendungen** | 137 Einträge: Redewendungen, geflügelte Worte, Kalauer, Wortgeschichten und Eselsbrücken – direkt in Artikeln und Zeitstrahlen verlinkt |
+| **Gesprächsstoff** | 91 Geschichtsreferenzen für den Alltag: in welcher Situation, was man sagt und die Geschichte dahinter – mit Kopier-Knopf und Zufallsspruch |
+| **Fakten** | 114 überraschende Fakten: zeitliche Perspektive, Mythen, Kurioses, Ursprung des Alltags, Menschen |
+| **Redewendungen** | 143 Einträge: Redewendungen, geflügelte Worte, Kalauer, Wortgeschichten und Eselsbrücken – direkt in Artikeln und Zeitstrahlen verlinkt |
 | **Suche** | Volltextsuche über alles, auch nach Jahreszahlen (z. B. „1648“) |
 
 Dazu: Hell- und Dunkelmodus und ein Layout für Desktop und Handy.
@@ -55,7 +55,7 @@ Alle Inhalte liegen in `data/` als einfache JavaScript-Objekte:
 - `themes.js` – wiederkehrende Themen
 - `idioms.js`, `idioms-2.js` – Redewendungen (`kind`: `redewendung`, `zitat`, `kalauer`, `wort`, `merkspruch`)
 - `talk.js` – Gesprächsstoff (`when` = Situation, `say` = was man sagt, `story` = Hintergrund, `cat`: `buero`, `alltag`, `konter`, `prognose`, `politik`)
-- `facts.js` – Fakten (`cat`: `perspektive`, `mythos`, `kurios`, `alltag`, `menschen`)
+- `facts.js`, `more.js` – Fakten (`more.js` enthält zusätzlich Gesprächsstoff und Redewendungen) (`cat`: `perspektive`, `mythos`, `kurios`, `alltag`, `menschen`)
 - `articles-*.js` – Artikel
 - `world.js` – Welt- und Kontinent-Zeitstrahlen
 - `countries-*.js` – Länder-Zeitstrahlen

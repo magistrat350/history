@@ -1,8 +1,8 @@
 /* Einfacher Offline-Cache: erst Netz, bei Fehler aus dem Cache. */
-const CACHE = 'chronika-v2';
+const CACHE = 'chronika-v3';
 const ASSETS = [
   './', 'index.html', 'css/style.css', 'js/app.js', 'icon.svg', 'manifest.webmanifest',
-  'js/version.js', 'data/themes.js', 'data/idioms.js', 'data/idioms-2.js', 'data/talk.js', 'data/facts.js', 'data/articles-antike.js', 'data/articles-mittelalter.js',
+  'js/version.js', 'data/themes.js', 'data/idioms.js', 'data/idioms-2.js', 'data/talk.js', 'data/facts.js', 'data/more.js', 'data/articles-antike.js', 'data/articles-mittelalter.js',
   'data/articles-neuzeit.js', 'data/articles-moderne.js', 'data/world.js', 'data/countries-europa.js',
   'data/countries-asien.js', 'data/countries-afrika.js', 'data/countries-amerika-ozeanien.js'
 ];
